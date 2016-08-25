@@ -48,6 +48,8 @@ $ oc login -u johndoe -p password https://your.on-premise.broker:8443/
 $ oc login --token=xxxxxx https://api.preview.openshift.com/
 ```
 
+NOTE: amq images are currently not available in OSO (developer preview)
+
 * Create a new OpenShift project or reuse an existing one (switch to it).
 
 ```shell
