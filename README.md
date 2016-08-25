@@ -13,12 +13,10 @@ have its own PVC (and a corresponding PV on the cluster side).
 ## before you begin
 
 1. Create a new OpenShift project or reuse an existing one (switch to it).
-
 ```shell
 $ oc login -u johndoe -p password
 $ oc new-project <project-name>
 ```
-
 2. Make sure there are as many PersistentVolumes available as the number of brokers you intend to run.
 
 ## deploying
