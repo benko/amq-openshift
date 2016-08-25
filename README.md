@@ -3,17 +3,39 @@
 This project demonstrates how multiple A-MQ brokers can be set up in a mesh in
 OpenShift without sharing a `DeploymentConfig` (that is, how an A-MQ mesh can
 work without a `ReplicationController`, just several stand-alone independent
-Pods).
+pods).
 
-For added value, it uses a RWO (`ReadWriteOnly`) `PersistentVolumeClaim`, which
-is apparently the only write-access mode currently supported by EBS. This means
-that only one pod will be able to acquire write access and all others trying to
-access that particular PV will have to be happy just observing.
+## the problem
 
-That is  also why a PVC can not be shared by multiple brokers in *split* mode
-(that is, sharing one single PVC by creating multiple message stores inside
-subdirectories) - each broker must have its own PVC (and a corresponding PV on
-the cluster side).
+This project uses RWO (`ReadWriteOnce`) PVCs (`PersistentVolumeClaim`s), which
+is apparently the only write-access mode currently supported by EBS storage
+backend. This means that only one pod will be able to acquire write access and
+all others trying to access that particular PVC will have to be happy just
+observing.
+
+That is also why a PVC with this access mode can not be shared by multiple
+brokers in *split* mode (that is, sharing one PVC by creating multiple message
+stores inside subdirectories, one per pod replica), and herein lies the root of
+all evil, and the reason for this sample project to exist in the first place.
+
+Using a `ReplicationController` to scale A-MQ pods up to create a mesh works
+wonderfully when there are RWM (`ReadWriteMany`) PVCs available - there is
+almost nothing to do except deploy the pod and scale it.
+
+In RWO access mode, however, each broker must have its own PVC (and a
+corresponding PV on the cluster side), which means we can not control their
+number simply by scaling the pods - scaled pods will use the *exact* same pod
+template, all of them, which also means their `Volume`s and `VolumeMount`s will
+be the same - referring to the same `PersistentVolumeClaim`.
+
+For this reason, we create one PVC per broker replica, and then use shared
+labels on the pods we deploy to enable the mesh `Service` to find all pods
+using a `selector`.
+
+To be able to prove that messages are indeed being forwarded between the
+brokers (i.e. *store-and-forward* federation), we also use two additional
+services, an `incoming` and and `outgoing` service used by the JMS producer and
+consumer applications, respectively.
 
 ## before you begin
 
