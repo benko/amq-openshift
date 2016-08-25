@@ -33,7 +33,7 @@ $ oc project <existing-project>
 
 ## deploying
 
-### Create dependencies
+### create dependencies
 
 ```shell
 $ oc create -f amq-claims.json
@@ -41,9 +41,9 @@ $ oc create -f amq-service.json
 $ oc create -f amq-svc-account.json
 ```
 
-### Edit and create the two brokers:
+### edit and create the two brokers
 
-Edit the deployment configurations in amq-incoming.json and amq-outgoing.json.
+Edit the deployment configurations in `amq-incoming.json` and `amq-outgoing.json`.
 
 * option 1: use DNS for resolving service endpoints
     (replace "`<project-name>`" with the actual project name)
@@ -72,8 +72,6 @@ Edit the deployment configurations in amq-incoming.json and amq-outgoing.json.
     },
 ```
 
-### Start the deployments
-
 NOTE: You must add the "view" privilege to the service account used to run
   the pods if using the Kube API:
 
@@ -82,7 +80,15 @@ NOTE: You must add the "view" privilege to the service account used to run
 	    view system:serviceaccount:<project-name>:amq-service-account
 ```
 
-## starting the broker pods
+### start the brokers
+
+Having created the DCs, there are no triggers that would start a deployment, so
+do it manually:
+
+```shell
+    $ oc deploy amq-incoming --latest
+    $ oc deploy amq-outgoing --latest
+```
 
 Upon start-up, the last log messages displayed by either broker should be:
 
@@ -97,16 +103,31 @@ Upon start-up, the last log messages displayed by either broker should be:
 
 ## deploying the clients
 
-After that, simply create two new apps, the producer and the consumer, and wait
-for them to be deployed to start seeing the messages being passed between the
-two (the environment should already contain the service lookup variables):
+### create new apps
+
+Once the brokers are running, simply create two new apps, the producer and the
+consumer.
+
+We will be using the `fis-karaf-openshift` image with those to initiate a S2I
+build of the OSGi bundles that will eventually do the sending and receiving of
+the JMS messages.
+
+NOTE: Since these two sample bundles are just subdirectories of this Git
+repository, you need to use the `--context-dir=` option to tell the S2I build
+not to invoke Maven from the top level of the Git module.
 
 ```shell
-$ oc new-app --name=producer fis-karaf-openshift~http://<gitserver>/<project-url>/
-$ oc new-app --name=consumer fis-karaf-openshift~http://<gitserver>/<project-url>/
+$ oc new-app --name=producer --context-dir=producer \
+	fis-karaf-openshift~http://github.com/benko/amq-openshift/
+$ oc new-app --name=consumer --context-dir=consumer \
+	fis-karaf-openshift~http://github.com/benko/amq-openshift/
 ```
 
-## monitoring the output
+Wait for the builds to finish and the pods to be deployed to start seeing the
+messages being passed between the two every 5 seconds (the environment should
+already contain the service lookup variables as required to use the services).
+
+### monitor the output
 
 When these two are built and deployed, the following messages of level INFO
 should appear at the start in the logs of the producer and consumer pods
