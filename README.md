@@ -6,9 +6,14 @@ work without a `ReplicationController`, just several stand-alone independent
 Pods).
 
 For added value, it uses a RWO (`ReadWriteOnly`) `PersistentVolumeClaim`, which
-is apparently the only write-access mode currently supported by EBS. In this
-mode, PVs can not be shared by multiple brokers in *split* mode - each broker
-must have its own PVC (and a corresponding PV on the cluster side).
+is apparently the only write-access mode currently supported by EBS. This means
+that only one pod will be able to acquire write access and all others trying to
+access that particular PV will have to be happy just observing.
+
+That is  also why a PVC can not be shared by multiple brokers in *split* mode
+(that is, sharing one single PVC by creating multiple message stores inside
+subdirectories) - each broker must have its own PVC (and a corresponding PV on
+the cluster side).
 
 ## before you begin
 
