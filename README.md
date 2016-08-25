@@ -33,9 +33,9 @@ $ oc project <existing-project>
 * Create dependencies:
 
 ```shell
-$ oc create -f amq-service.json
-$ oc create -f serviceaccount.json
 $ oc create -f amq-claims.json
+$ oc create -f amq-service.json
+$ oc create -f amq-svc-account.json
 ```
 
 * Edit and create deployment configurations for the two brokers:
