@@ -64,9 +64,18 @@ $ oc project <existing-project>
 
 ### create dependencies
 
+* Create the `PersistentVolumeClaim`s for the brokers:
 ```shell
 $ oc create -f json/amq-claims.json
+```
+
+* Create the three services: incoming, outgoing and amq-mesh:
+```shell
 $ oc create -f json/amq-service.json
+```
+
+* Create the A-MQ broker service account (optional, but remove the reference from the DC and forget about Kube discovery type if you want to run without it):
+```shell
 $ oc create -f json/amq-svc-account.json
 ```
 
