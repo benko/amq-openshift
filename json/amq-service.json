@@ -1,0 +1,69 @@
+{
+    "kind": "List",
+    "apiVersion": "v1",
+    "items": [
+	{
+	    "kind": "Service",
+	    "apiVersion": "v1",
+	    "metadata": {
+		"name": "incoming",
+		"labels": {
+		    "application": "amq"
+		}
+	    },
+	    "spec": {
+		"ports": [
+		    {
+			"port": 61616,
+			"targetPort": 61616
+		    }
+		],
+		"selector": {
+		    "podtype": "amq-incoming"
+		}
+	    }
+	},
+	{
+	    "kind": "Service",
+	    "apiVersion": "v1",
+	    "metadata": {
+		"name": "outgoing",
+		"labels": {
+		    "application": "amq"
+		}
+	    },
+	    "spec": {
+		"ports": [
+		    {
+			"port": 61616,
+			"targetPort": 61616
+		    }
+		],
+		"selector": {
+		    "podtype": "amq-outgoing"
+		}
+	    }
+	},
+	{
+	    "kind": "Service",
+	    "apiVersion": "v1",
+	    "metadata": {
+		"name": "amq-mesh",
+		"labels": {
+		    "application": "amq"
+		}
+	    },
+	    "spec": {
+		"ports": [
+		    {
+			"port": 61616,
+			"targetPort": 61616
+		    }
+		],
+		"selector": {
+		    "mesh": "amq"
+		}
+	    }
+	}
+    ]
+}

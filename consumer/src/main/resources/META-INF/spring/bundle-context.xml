@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="         http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd        http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring.xsd       ">
+    <bean class="org.apache.camel.component.jms.JmsComponent" id="jms">
+        <property name="connectionFactory">
+            <bean class="org.apache.activemq.ActiveMQConnectionFactory">
+                <property name="brokerURL" value="tcp://#{systemEnvironment['INCOMING_SERVICE_HOST']}:#{systemEnvironment['INCOMING_SERVICE_PORT']}"/>
+                <property name="userName" value="user"/>
+                <property name="password" value="password"/>
+            </bean>
+        </property>
+    </bean>
+    <bean class="net.p0f.openshift.examples.consumer.Consumer" id="consumer">
+    	<property name="jmsComponent" ref="jms"/>
+    </bean>
+    <camelContext id="camelContext-55d1f9ab-9166-4597-9e14-5ded78bb03cc" xmlns="http://camel.apache.org/schema/spring">
+    	<routeBuilder ref="consumer"/>
+    </camelContext>
+</beans>

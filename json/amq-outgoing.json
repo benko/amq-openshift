@@ -1,0 +1,170 @@
+{
+    "kind": "DeploymentConfig",
+    "apiVersion": "v1",
+    "metadata": {
+	"name": "amq-outgoing",
+	"labels": {
+	    "application": "amq"
+	}
+    },
+    "spec": {
+	"strategy": {
+	    "type": "Rolling",
+	    "rollingParams": {
+		"maxSurge": 0
+	    }
+	},
+	"triggers": [
+	    {
+		"type": "ImageChange",
+		"imageChangeParams": {
+		    "automatic": true,
+		    "containerNames": [
+			"amq"
+		    ],
+		    "from": {
+			"kind": "ImageStreamTag",
+			"namespace": "openshift",
+			"name": "jboss-amq-62:latest"
+		    }
+		}
+	    },
+	    {
+		"type": "ConfigChange"
+	    }
+	],
+	"replicas": 1,
+	"selector": {
+	    "podtype": "amq-outgoing"
+	},
+	"template": {
+	    "metadata": {
+		"name": "amq-outgoing",
+		"labels": {
+		    "application": "amq",
+		    "podtype": "amq-outgoing",
+		    "mesh": "amq"
+		}
+	    },
+	    "spec": {
+		"serviceAccountName": "amq-service-account",
+		"terminationGracePeriodSeconds": 60,
+		"containers": [
+		    {
+			"name": "amq-outgoing",
+			"image": "infra.ose32.example.com:5000/jboss-amq-6/amq62-openshift:latest",
+			"imagePullPolicy": "Always",
+			"volumeMounts": [
+			    {
+				"mountPath": "/opt/amq/data",
+				"name": "amq-volume"
+			    }
+			],
+			"readinessProbe": {
+			    "exec": {
+				"command": [
+				    "/bin/bash",
+				    "-c",
+				    "/opt/amq/bin/readinessProbe.sh"
+				]
+			    }
+			},
+			"ports": [
+			    {
+				"name": "jolokia",
+				"containerPort": 8778,
+				"protocol": "TCP"
+			    },
+			    {
+				"name": "amqp",
+				"containerPort": 5672,
+				"protocol": "TCP"
+			    },
+			    {
+				"name": "amqp-ssl",
+				"containerPort": 5671,
+				"protocol": "TCP"
+			    },
+			    {
+				"name": "mqtt",
+				"containerPort": 1883,
+				"protocol": "TCP"
+			    },
+			    {
+				"name": "mqtt-ssl",
+				"containerPort": 8883,
+				"protocol": "TCP"
+			    },
+			    {
+				"name": "stomp",
+				"containerPort": 61613,
+				"protocol": "TCP"
+			    },
+			    {
+				"name": "stomp-ssl",
+				"containerPort": 61612,
+				"protocol": "TCP"
+			    },
+			    {
+				"name": "tcp",
+				"containerPort": 61616,
+				"protocol": "TCP"
+			    },
+			    {
+				"name": "tcp-ssl",
+				"containerPort": 61617,
+				"protocol": "TCP"
+			    }
+			],
+			"env": [
+			    {
+				"name": "AMQ_USER",
+				"value": "user"
+			    },
+			    {
+				"name": "AMQ_PASSWORD",
+				"value": "password"
+			    },
+			    {
+				"name": "AMQ_TRANSPORTS",
+				"value": "openwire"
+			    },
+			    {
+				"name": "AMQ_SPLIT",
+				"value": "false"
+			    },
+			    {
+				"name": "AMQ_MESH_DISCOVERY_TYPE",
+				"value": "dns"
+			    },
+			    {
+				"name": "AMQ_MESH_SERVICE_NAME",
+				"value": "amq-mesh.<project-name>.svc.cluster.local"
+			    },
+			    {
+				"name": "AMQ_MESH_SERVICE_NAMESPACE",
+				"valueFrom": {
+				    "fieldRef": {
+					"fieldPath": "metadata.namespace"
+				    }
+				}
+			    },
+			    {
+				"name": "AMQ_STORAGE_USAGE_LIMIT",
+				"value": "500 mb"
+			    }
+			]
+		    }
+		],
+		"volumes": [
+		    {
+			"name": "amq-volume",
+			"persistentVolumeClaim": {
+			    "claimName": "amq-outgoing-claim"
+			}
+		    }
+		]
+	    }
+	}
+    }
+}
