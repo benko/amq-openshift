@@ -54,6 +54,7 @@ $ oc create -f amq-svc-account.json
 ```
 
     * option 2: use Kube API for resolving service endpoints
+
 ```json
     {
 	"name": "AMQ_MESH_DISCOVERY_TYPE",
@@ -64,8 +65,10 @@ $ oc create -f amq-svc-account.json
 	"value": "amq-mesh"
     },
 ```
+
     NOTE: You must add the "view" privilege to the service account used to run
     the pods if using the Kube API:
+
 ```shell
     $ oc adm policy add-role-to-user \
 	    view system:serviceaccount:<project-name>:amq-service-account
