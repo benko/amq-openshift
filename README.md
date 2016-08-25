@@ -28,14 +28,16 @@ number simply by scaling the pods - scaled pods will use the *exact* same pod
 template, all of them, which also means their `Volume`s and `VolumeMount`s will
 be the same - referring to the same `PersistentVolumeClaim`.
 
-For this reason, we create one PVC per broker replica, and then use shared
-labels on the pods we deploy to enable the mesh `Service` to find all pods
-using a `selector`.
+For this reason, we create one PVC per broker, deploy each of them using its
+own `DeploymentConfig` which has a shared label between all the pods we
+deployed, to enable the mesh `Service` to find all pods using a `selector` over
+the common label.
 
 To be able to prove that messages are indeed being forwarded between the
 brokers (i.e. *store-and-forward* federation), we also use two additional
 services, an `incoming` and and `outgoing` service used by the JMS producer and
-consumer applications, respectively.
+consumer applications, respectively - we want to be sure they connect to
+different brokers so as to trigger the message forwarding, of course.
 
 ## before you begin
 
@@ -63,16 +65,16 @@ $ oc project <existing-project>
 ### create dependencies
 
 ```shell
-$ oc create -f amq-claims.json
-$ oc create -f amq-service.json
-$ oc create -f amq-svc-account.json
+$ oc create -f json/amq-claims.json
+$ oc create -f json/amq-service.json
+$ oc create -f json/amq-svc-account.json
 ```
 
 ### edit and create the two brokers
 
 Edit the deployment configurations in `amq-incoming.json` and `amq-outgoing.json`.
 
-* option 1: use DNS for resolving service endpoints
+* option 1: use the internal DNS for resolving service endpoints
     (replace "`<project-name>`" with the actual project name)
 
 ```json
@@ -103,8 +105,7 @@ NOTE: You must add the "view" privilege to the service account used to run
   the pods if using the Kube API:
 
 ```shell
-    $ oc adm policy add-role-to-user \
-	    view system:serviceaccount:<project-name>:amq-service-account
+    $ oc adm policy add-role-to-user view system:serviceaccount:<project-name>:amq-service-account
 ```
 
 ### start the brokers
@@ -128,12 +129,21 @@ Upon start-up, the last log messages displayed by either broker should be:
 	tcp:///10.x.y.z:61616@36988 (amq-incoming-x-yyyyy) has been established.
 ```
 
+This proves that the two brokers have been able to resolve each other's
+endpoints through the use of a common service (set by the environment variable
+`AMQ_MESH_SERVICE_NAME`).
+
 ## deploying the clients
 
 ### create new apps
 
 Once the brokers are running, simply create two new apps, the producer and the
 consumer.
+
+NOTE: It is recommended to create the producer first, and only proceed to the
+consumer once the former one is up and running. This will make debugging any
+potential problems easier and also prove that messages will indeed be *stored*,
+not just forwarded while both clients are alive and running.
 
 We will be using the `fis-karaf-openshift` image with those to initiate a S2I
 build of the OSGi bundles that will eventually do the sending and receiving of
