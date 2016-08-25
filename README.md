@@ -40,8 +40,9 @@ $ oc create -f amq-svc-account.json
 
 * Edit and create deployment configurations for the two brokers:
 
-    * option 1: use DNS for resolving service endpoints
+  * option 1: use DNS for resolving service endpoints
     (replace "`<project-name>`" with the actual project name)
+
 ```json
     {
 	"name": "AMQ_MESH_DISCOVERY_TYPE",
@@ -53,7 +54,7 @@ $ oc create -f amq-svc-account.json
     },
 ```
 
-    * option 2: use Kube API for resolving service endpoints
+  * option 2: use Kube API for resolving service endpoints
 
 ```json
     {
@@ -66,8 +67,8 @@ $ oc create -f amq-svc-account.json
     },
 ```
 
-    NOTE: You must add the "view" privilege to the service account used to run
-    the pods if using the Kube API:
+  NOTE: You must add the "view" privilege to the service account used to run
+  the pods if using the Kube API:
 
 ```shell
     $ oc adm policy add-role-to-user \
