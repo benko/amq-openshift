@@ -57,8 +57,8 @@ $ oc project <existing-project>
 
 * Make sure there are as many `PersistentVolume`s available as the number of
   brokers you intend to run. (Unfortunately there is no way to obtain a list of
-  PVs as a normal user - ask your cluster admin or look it up in
-  documentation.)
+  PVs as a normal user - ask your cluster admin, check the project limits, or
+  look it up in documentation.)
 
 ## deploying
 
@@ -66,22 +66,35 @@ $ oc project <existing-project>
 
 * Create the `PersistentVolumeClaim`s for the brokers:
 ```shell
-$ oc create -f json/amq-claims.json
+    $ oc create -f json/amq-claims.json
 ```
 
 * Create the three services: incoming, outgoing and amq-mesh:
 ```shell
-$ oc create -f json/amq-service.json
+    $ oc create -f json/amq-service.json
 ```
 
 * Create the A-MQ broker service account (optional, but remove the reference from the DC and forget about Kube discovery type if you want to run without it):
 ```shell
-$ oc create -f json/amq-svc-account.json
+    $ oc create -f json/amq-svc-account.json
 ```
 
 ### edit and create the two brokers
 
-Edit the deployment configurations in `amq-incoming.json` and `amq-outgoing.json`.
+We have two options with the brokers. We can either use the DNS or the Kube API
+mesh discovery type.
+
+The DNS discovery type is excellent because it is lightweight, requires no
+special privileges and works nicely across projects (provided you have a
+cross-project SDN established).
+
+The Kube API discovery type is simpler to set up (no project references) but
+requires a special privilege for the serviceaccount used to run the broker
+pods, and will only work if all the brokers are defined in the same project.
+
+Edit the deployment configurations in `amq-incoming.json` and
+`amq-outgoing.json` to select the discovery type (and fill in your project
+name).
 
 * option 1: use the internal DNS for resolving service endpoints
     (replace "`<project-name>`" with the actual project name)
@@ -115,6 +128,13 @@ NOTE: You must add the "view" privilege to the service account used to run
 
 ```shell
     $ oc adm policy add-role-to-user view system:serviceaccount:<project-name>:amq-service-account
+```
+
+Create the deployment configurations:
+
+```shell
+    $ oc create -f amq-incoming.json
+    $ oc create -f amq-outgoing.json
 ```
 
 ### start the brokers
