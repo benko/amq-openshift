@@ -16,13 +16,13 @@ have its own PVC (and a corresponding PV on the cluster side).
 
 ```shell
 $ oc login -u johndoe -p password https://your.on-premise.broker:8443/
-$ oc login --token=xxxxxx https://api.preview.openshift.com
+$ oc login --token=xxxxxx https://api.preview.openshift.com/
 ```
 
 * Create a new OpenShift project or reuse an existing one (switch to it).
 
 ```shell
-$ oc new-project <project-name>
+$ oc new-project <new-project>
 $ oc project <existing-project>
 ```
 
@@ -39,38 +39,39 @@ $ oc create -f amq-claims.json
 ```
 
 * Edit and create deployment configurations for the two brokers:
-    (Replace "<project-name>" with the actual project name.)
+    (Replace "`<project-name>`" with the actual project name.)
 
- - option 1: use DNS for resolving service endpoints
+    * option 1: use DNS for resolving service endpoints
 ```json
-{
-    "name": "AMQ_MESH_DISCOVERY_TYPE",
-    "value": "dns"
-},
-{
-    "name": "AMQ_MESH_SERVICE_NAME",
-    "value": "amq-mesh.<project-name>.svc.cluster.local"
-},
+    {
+	"name": "AMQ_MESH_DISCOVERY_TYPE",
+	"value": "dns"
+    },
+    {
+	"name": "AMQ_MESH_SERVICE_NAME",
+	"value": "amq-mesh.<project-name>.svc.cluster.local"
+    },
 ```
 
- - option 2: use Kube API for resolving service endpoints
-```json
-{
-    "name": "AMQ_MESH_DISCOVERY_TYPE",
-    "value": "kube"
-},
-{
-    "name": "AMQ_MESH_SERVICE_NAME",
-    "value": "amq-mesh"
-},
-```
+    * option 2: use Kube API for resolving service endpoints
+    ```json
+    {
+	"name": "AMQ_MESH_DISCOVERY_TYPE",
+	"value": "kube"
+    },
+    {
+	"name": "AMQ_MESH_SERVICE_NAME",
+	"value": "amq-mesh"
+    },
+    ```
+    NOTE: You must add the "view" privilege to the service account used to run
+    the pods if using the Kube API:
+    ```shell
+    $ oc adm policy add-role-to-user \
+	    view system:serviceaccount:<project-name>:amq-service-account
+    ```
 
-** Add "view" privilege to the service account used to run the pods:
-
-```shell
-$ oc adm policy add-role-to-user \
-	view system:serviceaccount:<project-name>:amq-service-account
-```
+## starting the broker pods
 
 Upon start-up, the last log messages displayed by either broker should be:
 
@@ -83,6 +84,8 @@ Upon start-up, the last log messages displayed by either broker should be:
 	tcp:///10.x.y.z:61616@36988 (amq-incoming-x-yyyyy) has been established.
 ```
 
+## deploying the clients
+
 After that, simply create two new apps, the producer and the consumer, and wait
 for them to be deployed to start seeing the messages being passed between the
 two (the environment should already contain the service lookup variables):
@@ -91,6 +94,8 @@ two (the environment should already contain the service lookup variables):
 $ oc new-app --name=producer fis-karaf-openshift~http://<gitserver>/<project-url>/
 $ oc new-app --name=consumer fis-karaf-openshift~http://<gitserver>/<project-url>/
 ```
+
+## monitoring the output
 
 When these two are built and deployed, the following messages of level INFO
 should appear at the start in the logs of the producer and consumer pods
