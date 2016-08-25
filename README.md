@@ -1,14 +1,14 @@
 # amq-openshift
 
 This project demonstrates how multiple A-MQ brokers can be set up in a mesh in
-OpenShift without sharing a DeploymentConfig (that is, how an A-MQ mesh can
-work without a ReplicationController, just several stand-alone independent
+OpenShift without sharing a `DeploymentConfig` (that is, how an A-MQ mesh can
+work without a `ReplicationController`, just several stand-alone independent
 Pods).
 
-For added value, it uses a RWO (ReadWriteOnly) PersistentVolumeClaim, which is
-apparently the only write-access mode currently supported by EBS. In this mode,
-PVs can not be shared by multiple brokers in *split* mode - each broker must
-have its own PVC (and a corresponding PV on the cluster side).
+For added value, it uses a RWO (`ReadWriteOnly`) `PersistentVolumeClaim`, which
+is apparently the only write-access mode currently supported by EBS. In this
+mode, PVs can not be shared by multiple brokers in *split* mode - each broker
+must have its own PVC (and a corresponding PV on the cluster side).
 
 ## before you begin
 
@@ -26,11 +26,14 @@ $ oc new-project <new-project>
 $ oc project <existing-project>
 ```
 
-* Make sure there are as many PersistentVolumes available as the number of brokers you intend to run. (Unfortunately there is no way to obtain a list of PVs as a normal user - ask your cluster admin or look it up in documentation.)
+* Make sure there are as many `PersistentVolume`s available as the number of
+  brokers you intend to run. (Unfortunately there is no way to obtain a list of
+  PVs as a normal user - ask your cluster admin or look it up in
+  documentation.)
 
 ## deploying
 
-* Create dependencies:
+### Create dependencies
 
 ```shell
 $ oc create -f amq-claims.json
@@ -38,9 +41,11 @@ $ oc create -f amq-service.json
 $ oc create -f amq-svc-account.json
 ```
 
-* Edit and create deployment configurations for the two brokers:
+### Edit and create the two brokers:
 
-  * option 1: use DNS for resolving service endpoints
+Edit the deployment configurations in amq-incoming.json and amq-outgoing.json.
+
+* option 1: use DNS for resolving service endpoints
     (replace "`<project-name>`" with the actual project name)
 
 ```json
@@ -54,7 +59,7 @@ $ oc create -f amq-svc-account.json
     },
 ```
 
-  * option 2: use Kube API for resolving service endpoints
+* option 2: use Kube API for resolving service endpoints
 
 ```json
     {
@@ -67,7 +72,9 @@ $ oc create -f amq-svc-account.json
     },
 ```
 
-  NOTE: You must add the "view" privilege to the service account used to run
+### Start the deployments
+
+NOTE: You must add the "view" privilege to the service account used to run
   the pods if using the Kube API:
 
 ```shell
