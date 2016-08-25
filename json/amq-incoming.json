@@ -52,7 +52,7 @@
 		"containers": [
 		    {
 			"name": "amq-incoming",
-			"image": "infra.ose32.example.com:5000/jboss-amq-6/amq62-openshift:latest",
+			"image": "registry.access.redhat.com/jboss-amq-6/amq62-openshift:latest",
 			"imagePullPolicy": "Always",
 			"volumeMounts": [
 			    {
